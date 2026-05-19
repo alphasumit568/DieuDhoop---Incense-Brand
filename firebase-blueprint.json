@@ -1,0 +1,184 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile and metadata",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "wishlist": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "isAdmin": { "type": "boolean" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Product": {
+      "title": "Store Product",
+      "description": "Premium incense product details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "discountPrice": { "type": "number" },
+        "categories": { "type": "array", "items": { "type": "string" } },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "stock": { "type": "integer" },
+        "averageRating": { "type": "number" },
+        "ratingCount": { "type": "integer" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "variants": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "price", "stock", "images"]
+    },
+    "Category": {
+      "title": "Product Category",
+      "description": "Hierarchical category management",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "image": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "Order": {
+      "title": "Customer Order",
+      "description": "Transactional order data",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "paid", "shipped", "delivered", "cancelled"] },
+        "paymentId": { "type": "string" },
+        "shippingAddress": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Admin": {
+      "title": "System Administrator",
+      "description": "Users with admin privileges",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" }
+      }
+    },
+    "SubscriptionPlan": {
+      "title": "Subscription Plan",
+      "description": "Recurring delivery plan details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "interval": { "type": "string", "enum": ["monthly", "quarterly"] },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "razorpayPlanId": { "type": "string" }
+      }
+    },
+    "UserSubscription": {
+      "title": "User Subscription",
+      "description": "Active user subscription tracking",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "planId": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "cancelled", "expired"] },
+        "startDate": { "type": "string", "format": "date-time" },
+        "currentPeriodEnd": { "type": "string", "format": "date-time" },
+        "razorpaySubscriptionId": { "type": "string" }
+      }
+    },
+    "Review": {
+      "title": "Product Review",
+      "description": "User ratings and feedback",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "rating": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "comment": { "type": "string" },
+        "recommends": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["productId", "userId", "rating", "comment", "recommends", "createdAt"]
+    },
+    "Coupon": {
+      "title": "Discount Coupon",
+      "description": "Promotional codes for discounts",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "discount": { "type": "number" },
+        "type": { "type": "string", "enum": ["percent", "flat"] },
+        "active": { "type": "boolean" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["code", "discount", "type", "active"]
+    },
+    "ContactMessage": {
+      "title": "Contact Form Message",
+      "description": "Messages from the contact form",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "message": { "type": "string" },
+        "status": { "type": "string", "enum": ["new", "read", "replied"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "message"]
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "Collection of user profiles"
+    },
+    "products": {
+      "schema": "Product",
+      "description": "Store inventory"
+    },
+    "categories": {
+      "schema": "Category",
+      "description": "Product groupings"
+    },
+    "orders": {
+      "schema": "Order",
+      "description": "Customer transactions"
+    },
+    "admins": {
+      "schema": "Admin",
+      "description": "List of administrators"
+    },
+    "subscriptionPlans": {
+      "schema": "SubscriptionPlan",
+      "description": "Available subscription tiers"
+    },
+    "userSubscriptions": {
+      "schema": "UserSubscription",
+      "description": "Active subscriptions per user"
+    },
+    "reviews": {
+      "schema": "Review",
+      "description": "Product reviews and ratings"
+    },
+    "coupons": {
+      "schema": "Coupon",
+      "description": "Manageable discount codes"
+    },
+    "contactMessages": {
+      "schema": "ContactMessage",
+      "description": "Customer inquiries and feedback"
+    }
+  }
+}

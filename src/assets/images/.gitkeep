@@ -1,0 +1,2 @@
+# This file ensures the images directory is tracked even if empty
+# You can place your local images here and import them in your components.

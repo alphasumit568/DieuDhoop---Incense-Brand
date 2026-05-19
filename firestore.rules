@@ -1,0 +1,136 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email.lower() == "sumitsharma60158@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // User document validation
+    function isValidUser(data) {
+      return data.uid == request.auth.uid 
+        && data.email is string
+        && (data.keys().hasAll(['uid', 'email', 'displayName', 'photoURL', 'wishlist', 'createdAt', 'isAdmin']));
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'wishlist'])
+      ) || isAdmin();
+    }
+
+    // Admins
+    match /admins/{userId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // Categories
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Products
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders
+    match /orders/{orderId} {
+      allow get: if isOwner(resource.data.userId) || isAdmin();
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update: if isAdmin();
+    }
+
+    // Subscriptions
+    match /subscriptionPlans/{planId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /userSubscriptions/{subscriptionId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isSignedIn();
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Reviews
+    function isValidReview(data) {
+      return data.userId == request.auth.uid
+        && data.rating is int && data.rating >= 1 && data.rating <= 5
+        && data.comment is string && data.comment.size() <= 2000
+        && data.productId is string
+        && (data.userName is string || data.userName == null)
+        && (data.userPhoto is string || data.userPhoto == null)
+        && (data.recommends is bool || data.recommends == null)
+        && (data.helpfulCount is int || data.helpfulCount == null)
+        && (data.helpfulBy is list || data.helpfulBy == null)
+        && data.createdAt == request.time;
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidReview(request.resource.data);
+      allow update: if (isOwner(resource.data.userId) || isAdmin()) && (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comment', 'rating', 'helpfulCount', 'recommends', 'helpfulBy'])
+      );
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Coupons
+    function isValidCoupon(data) {
+      return data.code is string && data.code.size() <= 50
+        && data.discount is number
+        && (data.type == 'percent' || data.type == 'flat')
+        && (data.expiresAt is string || data.expiresAt == null)
+        && data.active is bool;
+    }
+
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidCoupon(request.resource.data);
+    }
+
+    // Contact Messages
+    function isValidContactMessage(data) {
+      return data.name is string && data.name.size() <= 100
+        && data.email is string && data.email.size() <= 100
+        && data.message is string && data.message.size() <= 5000
+        && data.createdAt == request.time
+        && data.status == 'new';
+    }
+
+    match /contactMessages/{messageId} {
+      allow create: if isValidContactMessage(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

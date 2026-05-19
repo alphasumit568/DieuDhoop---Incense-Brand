@@ -1,0 +1,6 @@
+{
+  "name": "DieuDhoop - Divine Incense",
+  "description": "Premium spiritual incense brand offering Vedic-inspired luxury fragrances and wellness products.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
